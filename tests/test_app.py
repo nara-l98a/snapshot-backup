@@ -84,6 +84,25 @@ class SnapshotBackupTests(unittest.TestCase):
         self.assertFalse(valid)
         self.assertTrue(any("路径越界" in problem for problem in problems))
 
+    def test_verify_detects_extra_payload_file(self):
+        manifest = create(self.source, self.output, self.state)
+        snapshot = self.output / manifest["id"]
+        (snapshot / "data" / "unexpected.txt").write_text("extra", encoding="utf-8")
+        valid, problems = verify(snapshot)
+        self.assertFalse(valid)
+        self.assertIn("未登记内容：unexpected.txt", problems)
+
+    def test_verify_detects_duplicate_manifest_path(self):
+        manifest = create(self.source, self.output, self.state)
+        snapshot = self.output / manifest["id"]
+        manifest["files"].append(dict(manifest["files"][0]))
+        (snapshot / "manifest.json").write_text(
+            json.dumps(manifest, ensure_ascii=False), encoding="utf-8"
+        )
+        valid, problems = verify(snapshot)
+        self.assertFalse(valid)
+        self.assertTrue(any("重复文件记录" in problem for problem in problems))
+
 
 if __name__ == "__main__":
     unittest.main()

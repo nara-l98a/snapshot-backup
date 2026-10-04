@@ -148,11 +148,16 @@ def verify(snapshot: Path) -> tuple[bool, list[str]]:
         return False, ["缺失或无效：data/ 目录"]
     payload_root = payload.resolve()
     problems: list[str] = []
+    expected_paths: set[str] = set()
     for item in manifest["files"]:
         if not isinstance(item, dict) or not isinstance(item.get("path"), str):
             problems.append("manifest 含无效文件记录")
             continue
-        relative = Path(item["path"])
+        path_text = item["path"]
+        if path_text in expected_paths:
+            problems.append(f"manifest 含重复文件记录：{path_text}")
+        expected_paths.add(path_text)
+        relative = Path(path_text)
         if relative.is_absolute() or not relative.parts or any(part in (".", "..") for part in relative.parts):
             problems.append(f"路径越界：{item['path']}")
             continue
@@ -180,6 +185,19 @@ def verify(snapshot: Path) -> tuple[bool, list[str]]:
             continue
         if resolved.stat().st_size != item.get("size") or digest(resolved) != item.get("sha256"):
             problems.append(f"校验失败：{item['path']}")
+    for root, directories, names in os.walk(payload, followlinks=False):
+        root_path = Path(root)
+        for name in list(directories):
+            candidate = root_path / name
+            if candidate.is_symlink():
+                directories.remove(name)
+                relative = str(candidate.relative_to(payload))
+                if relative not in expected_paths:
+                    problems.append(f"未登记内容：{relative}")
+        for name in names:
+            relative = str((root_path / name).relative_to(payload))
+            if relative not in expected_paths:
+                problems.append(f"未登记内容：{relative}")
     return not problems, problems
 
 

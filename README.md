@@ -44,7 +44,7 @@ SNAPSHOT_BACKUP_DATA=/tmp/sb-state.json snapshot-backup verify <快照 ID>
 
 ## 数据格式、隐私与开发
 
-状态 JSON 含 `version`、`snapshots`（id、path、source、created_at、file_count）；快照 `manifest.json` 含格式版本、源路径、时间、相对文件路径、字节数、SHA-256 和跳过项。`examples/` 无个人数据、凭据、Token 或密码。测试使用 `tempfile`，覆盖创建、完整性校验、篡改、输出边界、符号链接、路径穿越防护、用户同名文件和旧快照保留：
+状态 JSON 含 `version`、`snapshots`（id、path、source、created_at、file_count）；快照 `manifest.json` 含格式版本、源路径、时间、相对文件路径、字节数、SHA-256 和跳过项。`verify` 除了检查清单中的每个文件，还会拒绝重复清单路径及 `data/` 中未登记的额外文件或符号链接，避免快照悄悄偏离其清单。`examples/` 无个人数据、凭据、Token 或密码。测试使用 `tempfile`，覆盖创建、完整性校验、篡改、额外内容、重复记录、输出边界、符号链接、路径穿越防护、用户同名文件和旧快照保留：
 
 ```bash
 python -m pip install -e .
