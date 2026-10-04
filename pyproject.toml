@@ -1,0 +1,15 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+[project]
+name = "snapshot-backup"
+version = "1.0.0"
+description = "本地目录版本化快照与 SHA-256 完整性校验工具"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {file = "LICENSE"}
+authors = [{name = "snapshot-backup contributors"}]
+[project.scripts]
+snapshot-backup = "snapshot_backup.app:main"
+[tool.setuptools.packages.find]
+where = ["src"]
